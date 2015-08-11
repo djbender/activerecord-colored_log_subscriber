@@ -10,12 +10,12 @@ module ActiveRecord
 
         def sql_color(sql)
           case sql
-            when /\s*\Ainsert/i      then ActiveSupport::LogSubscriber::GREEN
-            when /\s*\Aselect/i      then ActiveSupport::LogSubscriber::BLUE
-            when /\s*\Aupdate/i      then ActiveSupport::LogSubscriber::YELLOW
-            when /\s*\Adelete/i      then ActiveSupport::LogSubscriber::RED
-            when /transaction\s*\Z/i then ActiveSupport::LogSubscriber::CYAN
-            else ActiveSupport::LogSubscriber::MAGENTA
+          when /\s*\Ainsert/i      then ActiveSupport::LogSubscriber::GREEN
+          when /\s*\Aselect/i      then ActiveSupport::LogSubscriber::BLUE
+          when /\s*\Aupdate/i      then ActiveSupport::LogSubscriber::YELLOW
+          when /\s*\Adelete/i      then ActiveSupport::LogSubscriber::RED
+          when /transaction\s*\Z/i then ActiveSupport::LogSubscriber::CYAN
+          else ActiveSupport::LogSubscriber::MAGENTA
           end
         end
 
@@ -31,6 +31,8 @@ module ActiveRecord
           name  = '%s (%.1fms)' % [payload[:name], event.duration]
           sql   = payload[:sql].squeeze(' ')
           binds = nil
+          shard = payload[:shard]
+          shard = "  [#{shard[:database_server_id]}:#{shard[:id]} #{shard[:env]}]" if shard
           unless (payload[:binds] || []).empty?
             binds = "  " + payload[:binds].map { |col,v|
               if col
@@ -42,7 +44,7 @@ module ActiveRecord
           end
           name = color(name, nil, true)
           sql  = color(sql, sql_color(sql), true)
-          debug "  #{name}  #{sql}#{binds}"
+          debug "  #{name}  #{sql}#{binds}#{shard}"
         end
 
       end
@@ -57,6 +59,8 @@ module ActiveRecord
           name  = "#{payload[:name]} (#{event.duration.round(1)}ms)"
           sql   = payload[:sql].squeeze(' ')
           binds = nil
+          shard = payload[:shard]
+          shard = "  [#{shard[:database_server_id]}:#{shard[:id]} #{shard[:env]}]" if shard
           unless (payload[:binds] || []).empty?
             binds = "  " + payload[:binds].map { |col,v|
               render_bind(col, v)
@@ -64,7 +68,7 @@ module ActiveRecord
           end
           name = color(name, nil, true)
           sql  = color(sql, sql_color(sql), true)
-          debug "  #{name}  #{sql}#{binds}"
+          debug "  #{name}  #{sql}#{binds}#{shard}"
         end
 
       end
@@ -79,6 +83,8 @@ module ActiveRecord
           name  = "#{payload[:name]} (#{event.duration.round(1)}ms)"
           sql   = payload[:sql]
           binds = nil
+          shard = payload[:shard]
+          shard = "  [#{shard[:database_server_id]}:#{shard[:id]} #{shard[:env]}]" if shard
           unless (payload[:binds] || []).empty?
             binds = "  " + payload[:binds].map { |col,v|
               render_bind(col, v)
@@ -86,7 +92,7 @@ module ActiveRecord
           end
           name = color(name, nil, true)
           sql  = color(sql, sql_color(sql), true)
-          debug "  #{name}  #{sql}#{binds}"
+          debug "  #{name}  #{sql}#{binds}#{shard}"
         end
 
       end
@@ -105,3 +111,4 @@ module ActiveRecord
     end
   end
 end
+
